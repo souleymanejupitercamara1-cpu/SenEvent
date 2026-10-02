@@ -115,21 +115,17 @@
     padding:.8rem; border-radius:10px; font-weight:600; font-size:.95rem;
   }
   .modal-info a.contact:hover{background:var(--brick);}
-  .card .photo{aspect-ratio: 4/3; background:#e4dccb; overflow:hidden; position:relative;}
-  .card .photo img{
-    width:100%; height:100%; object-fit:cover; display:none; position:absolute; inset:0;
+  .card .photo, .modal-photo{aspect-ratio: 4/3; background:#e4dccb; overflow:hidden; position:relative;}
+  .modal-photo{aspect-ratio: 16/10;}
+  .photo img{width:100%; height:100%; object-fit:cover; display:block;}
+  .photo-strip{
+    display:flex; gap:.5rem; overflow-x:auto; padding-bottom:.2rem; margin-top:.2rem;
+    scroll-snap-type: x proximity;
   }
-  .card .photo img.active{display:block;}
-  .pnav{
-    position:absolute; top:50%; transform:translateY(-50%); background:rgba(22,35,46,0.55);
-    color:#fff; border:none; width:28px; height:28px; border-radius:50%; font-size:1.1rem;
-    cursor:pointer; line-height:1; display:flex; align-items:center; justify-content:center;
+  .photo-strip img{
+    width:88px; height:88px; object-fit:cover; border-radius:10px; flex:0 0 auto;
+    scroll-snap-align:start; border:1px solid var(--line);
   }
-  .pnav.prev{left:.5rem;} .pnav.next{right:.5rem;}
-  .pnav:hover{background:rgba(22,35,46,0.8);}
-  .pdots{position:absolute; bottom:.5rem; left:0; right:0; display:flex; justify-content:center; gap:.3rem;}
-  .pdots span{width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.55);}
-  .pdots span.active{background:#fff;}
   .card .badge{
     position:absolute; top:.7rem; left:.7rem; color:#fff;
     font-size:.72rem; font-weight:700; padding:.28rem .65rem; border-radius:999px;
@@ -299,17 +295,16 @@ function openDetail(idx){
   const photos = allPhotos(get(r,"Photos"));
   const spec = [get(r,"Spécialités traiteur"), get(r,"Type de matériel proposé")].filter(s => s && s.toLowerCase() !== "non applicable").join(" · ");
 
-  const photosHtml = photos.map((p,i) => `<img src="${p}" alt="${name}" loading="lazy" class="${i===0?'active':''}" onerror="this.style.display='none'">`).join("");
-  const navHtml = photos.length > 1 ? `
-      <button class="pnav prev" aria-label="Photo précédente">‹</button>
-      <button class="pnav next" aria-label="Photo suivante">›</button>
-      <div class="pdots">${photos.map((_,i)=>`<span class="${i===0?'active':''}"></span>`).join("")}</div>` : "";
+  const cover = photos[0] || "";
+  const stripHtml = photos.length > 1 ? `
+    <div class="photo-strip">
+      ${photos.map(p => `<img src="${p}" alt="${name}" loading="lazy" onerror="this.style.display='none'">`).join("")}
+    </div>` : "";
 
   document.getElementById("modalBody").innerHTML = `
-    <div class="photo modal-photo" data-index="0">
-      ${photosHtml}
+    <div class="photo modal-photo">
+      ${cover ? `<img src="${cover}" alt="${name}" loading="lazy" onerror="this.style.display='none'">` : ''}
       <span class="badge ${badgeClass(cat)}">${cat}</span>
-      ${navHtml}
     </div>
     <div class="modal-info">
       <h2>${name}</h2>
@@ -317,6 +312,7 @@ function openDetail(idx){
       <p class="desc">${desc}</p>
       ${tarif ? `<div class="tarif">${tarif}</div>` : ''}
       ${contact ? `<a class="contact" href="${waLink(contact, name)}" target="_blank" rel="noopener">Contacter sur WhatsApp</a>` : ''}
+      ${stripHtml}
     </div>`;
   document.getElementById("modalOverlay").classList.add("open");
   document.body.style.overflow = "hidden";
@@ -360,20 +356,6 @@ document.getElementById("modalOverlay").addEventListener("click", e => {
   if(e.target.id === "modalOverlay") closeDetail();
 });
 document.addEventListener("keydown", e => { if(e.key === "Escape") closeDetail(); });
-
-document.getElementById("modalBody").addEventListener("click", e => {
-  const btn = e.target.closest(".pnav");
-  if(!btn) return;
-  const photoDiv = btn.closest(".photo");
-  const imgs = photoDiv.querySelectorAll("img");
-  const dots = photoDiv.querySelectorAll(".pdots span");
-  let idx = photoDiv.dataset.index ? parseInt(photoDiv.dataset.index) : 0;
-  const count = imgs.length;
-  idx = btn.classList.contains("next") ? (idx + 1) % count : (idx - 1 + count) % count;
-  imgs.forEach((img,i) => img.classList.toggle("active", i === idx));
-  dots.forEach((d,i) => d.classList.toggle("active", i === idx));
-  photoDiv.dataset.index = idx;
-});
 
 fetch(CSV_URL)
   .then(res => res.text())
