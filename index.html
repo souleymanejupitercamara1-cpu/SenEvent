@@ -217,7 +217,9 @@ function norm(s){
   return s.trim().toLowerCase().replace(/[\u2018\u2019\u02BC`]/g, "'");
 }
 function get(row, key){
-  const k = Object.keys(row).find(h => norm(h) === norm(key));
+  const nk = norm(key);
+  let k = Object.keys(row).find(h => norm(h) === nk);
+  if(!k) k = Object.keys(row).find(h => norm(h).includes(nk) || nk.includes(norm(h)));
   return k ? (row[k] || "").trim() : "";
 }
 function allPhotos(str){
@@ -263,7 +265,7 @@ function render(){
   results.innerHTML = rows.map((r, idx) => {
     const name = get(r,"Nom de votre entreprise") || "Prestataire";
     const cat = get(r,"Catégorie de service");
-    const zoneTxt = get(r,"Zone d'intervention");
+    const zoneTxt = get(r,"Zone");
     const tarif = get(r,"Tarif");
     const photos = allPhotos(get(r,"Photos"));
     const logo = get(r,"Logo");
@@ -289,7 +291,7 @@ function openDetail(idx){
   const r = currentRows[idx];
   const name = get(r,"Nom de votre entreprise") || "Prestataire";
   const cat = get(r,"Catégorie de service");
-  const zoneTxt = get(r,"Zone d'intervention");
+  const zoneTxt = get(r,"Zone");
   const tarif = get(r,"Tarif");
   const desc = get(r,"Description courte");
   const contact = get(r,"Numéro de contact");
@@ -326,7 +328,7 @@ function closeDetail(){
 function populateZones(){
   const zones = new Set();
   ALL.forEach(r => {
-    get(r,"Zone d'intervention").split(",").forEach(z => { z = z.trim(); if(z) zones.add(z); });
+    get(r,"Zone").split(",").forEach(z => { z = z.trim(); if(z) zones.add(z); });
   });
   const sel = document.getElementById("zoneFilter");
   [...zones].sort().forEach(z => {
