@@ -266,7 +266,8 @@ function render(){
     const zoneTxt = get(r,"Zone d'intervention");
     const tarif = get(r,"Tarif");
     const photos = allPhotos(get(r,"Photos"));
-    const cover = photos[0] || "";
+    const logo = get(r,"Logo");
+    const cover = logo || photos[0] || "";
 
     return `<div class="card" data-idx="${idx}">
       <div class="photo">
