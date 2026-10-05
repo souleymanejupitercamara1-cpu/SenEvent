@@ -244,7 +244,7 @@ function render(){
 
   let rows = ALL.filter(r => {
     const cat = get(r, "Catégorie de service");
-    if(currentCat !== "all" && cat !== currentCat) return false;
+    if(currentCat !== "all" && norm(cat) !== norm(currentCat)) return false;
     const rowZone = get(r, "Zone d'intervention").toLowerCase();
     if(zone && !rowZone.includes(zone)) return false;
     if(q){
