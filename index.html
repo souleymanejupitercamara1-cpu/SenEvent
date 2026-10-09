@@ -187,8 +187,7 @@
 
 <main>
   <div class="filters">
-    <div><label>Zone</label><select id="zoneFilter"><option value="">Toutes les zones</option></select></div>
-    <div><label>Recherche</label><input type="text" id="searchInput" placeholder="Nom, spécialité..."></div>
+    <div style="flex:1;"><label>Recherche</label><input type="text" id="searchInput" placeholder="Zone, nom, spécialité... (ex: Pikine, pâtisserie)"></div>
   </div>
   <div class="count" id="count"></div>
   <div id="results" class="grid"><div class="loading">Chargement des prestataires…</div></div>
@@ -239,16 +238,13 @@ function badgeClass(cat){
 }
 
 function render(){
-  const zone = document.getElementById("zoneFilter").value.toLowerCase();
   const q = document.getElementById("searchInput").value.toLowerCase().trim();
 
   let rows = ALL.filter(r => {
     const cat = get(r, "Catégorie de service");
     if(currentCat !== "all" && norm(cat) !== norm(currentCat)) return false;
-    const rowZone = get(r, "Zone d'intervention").toLowerCase();
-    if(zone && !rowZone.includes(zone)) return false;
     if(q){
-      const hay = (get(r,"Nom de votre entreprise") + " " + get(r,"Spécialités traiteur") + " " + get(r,"Type de matériel proposé") + " " + get(r,"Description courte")).toLowerCase();
+      const hay = (get(r,"Nom de votre entreprise") + " " + get(r,"Zone") + " " + get(r,"Spécialités traiteur") + " " + get(r,"Type de matériel proposé") + " " + get(r,"Description courte")).toLowerCase();
       if(!hay.includes(q)) return false;
     }
     return true;
@@ -325,19 +321,6 @@ function closeDetail(){
   document.body.style.overflow = "";
 }
 
-function populateZones(){
-  const zones = new Set();
-  ALL.forEach(r => {
-    get(r,"Zone").split(",").forEach(z => { z = z.trim(); if(z) zones.add(z); });
-  });
-  const sel = document.getElementById("zoneFilter");
-  [...zones].sort().forEach(z => {
-    const opt = document.createElement("option");
-    opt.value = z; opt.textContent = z;
-    sel.appendChild(opt);
-  });
-}
-
 document.getElementById("tabs").addEventListener("click", e => {
   const btn = e.target.closest(".tab");
   if(!btn) return;
@@ -346,7 +329,6 @@ document.getElementById("tabs").addEventListener("click", e => {
   currentCat = btn.dataset.cat;
   render();
 });
-document.getElementById("zoneFilter").addEventListener("change", render);
 document.getElementById("searchInput").addEventListener("input", render);
 
 document.getElementById("results").addEventListener("click", e => {
@@ -365,7 +347,6 @@ fetch(CSV_URL)
   .then(csv => {
     const parsed = Papa.parse(csv, { header:true, skipEmptyLines:true });
     ALL = parsed.data.filter(r => get(r,"Nom de votre entreprise"));
-    populateZones();
     render();
   })
   .catch(err => {
