@@ -123,7 +123,18 @@
     display:flex; gap:.5rem; overflow-x:auto; padding-bottom:.2rem; margin-top:.2rem;
     scroll-snap-type: x proximity;
   }
-  .photo-strip img{
+  .lightbox{
+    display:none; position:fixed; inset:0; background:rgba(10,16,22,0.88); z-index:60;
+    align-items:center; justify-content:center; padding:1rem;
+    padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+  }
+  .lightbox.open{display:flex;}
+  .lightbox img{max-width:100%; max-height:78vh; object-fit:contain; border-radius:12px;}
+  .lightbox .modal-close{
+    position:absolute; top: calc(.8rem + env(safe-area-inset-top, 0px)); right:.8rem;
+    background:rgba(255,255,255,0.22);
+  }
+  .photo-strip img{cursor:zoom-in;
     width:88px; height:88px; object-fit:cover; border-radius:10px; flex:0 0 auto;
     scroll-snap-align:start; border:1px solid var(--line);
   }
@@ -199,6 +210,11 @@
     <button id="modalClose" class="modal-close" aria-label="Fermer">×</button>
     <div id="modalBody"></div>
   </div>
+</div>
+
+<div id="lightbox" class="lightbox">
+  <button id="lightboxClose" class="modal-close" aria-label="Fermer">×</button>
+  <img id="lightboxImg" alt="">
 </div>
 
 <footer>
@@ -358,7 +374,19 @@ document.getElementById("modalBody").addEventListener("click", e => {
 document.getElementById("modalOverlay").addEventListener("click", e => {
   if(e.target.id === "modalOverlay") closeDetail();
 });
-document.addEventListener("keydown", e => { if(e.key === "Escape") closeDetail(); });
+function closeLightbox(){ document.getElementById("lightbox").classList.remove("open"); }
+document.getElementById("lightbox").addEventListener("click", closeLightbox);
+document.getElementById("modalBody").addEventListener("click", e => {
+  const thumb = e.target.closest(".photo-strip img");
+  if(!thumb) return;
+  document.getElementById("lightboxImg").src = thumb.src;
+  document.getElementById("lightbox").classList.add("open");
+});
+document.addEventListener("keydown", e => {
+  if(e.key !== "Escape") return;
+  if(document.getElementById("lightbox").classList.contains("open")) closeLightbox();
+  else closeDetail();
+});
 
 fetch(CSV_URL)
   .then(res => res.text())
